@@ -34,7 +34,7 @@
     <div class="toolbar">
       <div class="field"><label>จังหวัด</label><select id="provinceFilter"><option value="__ALL__">ทุกจังหวัด</option></select></div>
       <div class="field"><label>ค้นหาในตาราง</label><input id="searchBox" placeholder="ค้นหา จังหวัด / รหัส / หน่วย / ข้อความ" /></div>
-      <div class="field"><label>โหมดกราฟ</label><select id="chartMode"><option value="percentile" selected>สรุปเป็น 100 กลุ่ม Percentile</option><option value="raw">ข้อมูลจริง สูงสุด 5,000 จุด</option></select></div>
+      <div class="field"><label>โหมดกราฟ</label><select id="chartMode"><option value="raw" selected>ข้อมูลจริง สูงสุด 5,000 จุด</option><option value="percentile">สรุปเป็น 100 กลุ่ม Percentile</option></select></div>
       <div class="field"><label>จำนวนแถวต่อหน้า</label><select id="pageSize"><option>25</option><option selected>50</option><option>100</option><option>200</option></select></div>
       <div class="field"><label>&nbsp;</label><button id="resetBtn">ล้างตัวกรอง</button></div>
     </div>
@@ -42,7 +42,7 @@
   <section class="kpis" id="kpiBox"></section>
   <section class="card">
     <h2 style="margin:0 0 6px;font-size:18px">กราฟเส้นเปรียบเทียบราคาตลาดกับราคาประเมิน</h2>
-    <div class="muted">แกน X เรียงตามราคาตลาดจากค่าน้อยไปมาก และ tooltip แสดงจังหวัด หน่วยที่ดินตามคอลัมน์ใน Google Sheet และเปอร์เซ็นต์ความแตกต่างทันที</div>
+    <div class="muted">แกน X เรียงตามราคาตลาดจากค่าน้อยไปมาก และ tooltip แสดงจังหวัด และหน่วยที่ดินตามคอลัมน์ใน Google Sheet โดยโหมด “ข้อมูลจริง” จะแสดงชื่อจริงของแต่ละจุด</div>
     <div class="legend-note"><span><i class="dot red"></i>ราคาตลาด</span><span><i class="dot blue"></i>ราคาประเมิน</span></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
   </section>
@@ -62,7 +62,7 @@ let colMap={province:null, market:null, assessed:null, id:null};
 const $ = id => document.getElementById(id);
 function showStatus(msg){const el=$('status'); el.style.display='block'; el.textContent=msg}
 function hideStatus(){ $('status').style.display='none' }
-function cleanHeader(s){return String(s||'').replace(/^\uFEFF/,'').trim();}
+function cleanHeader(s){return cleanText(s);}
 function cleanText(s){return String(s ?? '').replace(/^\uFEFF/,'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();}
 function normalizeProvince(s){
   let v=cleanText(s);
@@ -87,18 +87,23 @@ function parseCSV(text){
   row.push(val); out.push(row); return out.filter(r=>r.some(c=>cleanText(c) !== ''));
 }
 function findColumns(headers){
-  const norm=headers.map(h=>cleanText(h).toLowerCase().replace(/\s+/g,''));
+  const norm=headers.map(h=>cleanText(h).toLowerCase().replace(/[\s\u200B-\u200D\uFEFF().\/\-_:]+/g,''));
   const find=(patterns)=>{ for(const p of patterns){ const idx=norm.findIndex(h=>p.test(h)); if(idx>=0) return headers[idx]; } return null; };
-  return {
-    province: find([/จังหวัด/,/province/,/changwat/]),
+  const found = {
+    province: find([/จังหวัด/,/^province$/, /^changwat$/]),
     market: find([/ราคาตลาด/,/marketprice/,/market/,/ราคาซื้อขาย/]),
     assessed: find([/ราคาประเมิน/,/assess/,/appraised/,/valuation/,/ประเมิน/]),
-    id: find([/รหัสหน่วย/,/หน่วยที่ดิน/,/unit/,/id/,/รหัส/])
+    id: find([/หน่วยที่ดิน/,/รหัสหน่วย/,/landunit/,/unitname/,/^unit$/, /^id$/, /รหัส/])
   };
+  // fallback ตามโครงสร้างชีตที่ใช้จริง: จังหวัด, สำนักงานที่ดิน, หน่วยที่ดิน, ...
+  if(!found.province && headers[0]) found.province = headers[0];
+  if(!found.id && headers[2]) found.id = headers[2];
+  return found;
 }
 function prepareData(table){
   columns=table[0].map(cleanHeader);
   colMap=findColumns(columns);
+  console.log('Detected columns', colMap, columns);
   if(!colMap.market || !colMap.assessed){showStatus('ไม่พบคอลัมน์ราคาตลาดหรือราคาประเมิน กรุณาตรวจชื่อหัวคอลัมน์ให้มีคำว่า ราคาตลาด และ ราคาประเมิน');}
   rawRows=table.slice(1).map((r,idx)=>{
     const obj={__idx:idx+1}; columns.forEach((h,i)=>obj[h]=cleanText(r[i]));
