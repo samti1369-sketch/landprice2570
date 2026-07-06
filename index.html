@@ -17,7 +17,7 @@
     main{padding:22px;max-width:1500px;margin:auto}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
     .toolbar{display:grid;grid-template-columns:1.2fr 1fr 1fr .8fr .8fr;gap:12px;align-items:end}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     select,input,button{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:10px 12px;font-size:14px;background:white}button{cursor:pointer;font-weight:700;background:#eef4ff;color:#1849a9}button:hover{background:#dbeafe}
-    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(16,24,40,.05)}.kpi .label{color:var(--muted);font-size:12px}.kpi .value{font-size:24px;font-weight:800;margin-top:6px}.kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
+    .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(16,24,40,.05)}.kpi .label{color:var(--muted);font-size:12px}.kpi .value{font-size:24px;font-weight:800;margin-top:6px}.kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
     .chart-wrap{height:430px}.muted{color:var(--muted);font-size:13px}.table-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
     .table-wrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:14px}table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;background:white}th,td{border-bottom:1px solid var(--line);padding:10px 12px;white-space:nowrap;text-align:left}th{position:sticky;top:0;background:#f8fafc;z-index:2;cursor:pointer;color:#344054;font-size:12px}th:hover{background:#eef4ff}td.num{text-align:right;font-variant-numeric:tabular-nums}.negative{color:var(--red);font-weight:700}.positive{color:var(--green);font-weight:700}.pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}.pagination button{width:auto;min-width:90px}.status{padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;margin-bottom:14px;display:none}.legend-note{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px}.dot{display:inline-block;width:11px;height:11px;border-radius:999px;margin-right:6px}.red{background:var(--red)}.blue{background:var(--blue)}
     @media(max-width:1000px){.toolbar{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr 1fr}.chart-wrap{height:360px}}@media(max-width:600px){main{padding:12px}.toolbar,.kpis{grid-template-columns:1fr}header{padding:18px}.kpi .value{font-size:20px}}
@@ -104,7 +104,7 @@ function prepareData(table){
     const obj={__idx:idx+1}; columns.forEach((h,i)=>obj[h]=cleanText(r[i]));
     const market=parseNumber(obj[colMap.market]); const assessed=parseNumber(obj[colMap.assessed]);
     obj.__market=market; obj.__assessed=assessed;
-    obj.__diffPct=(Number.isFinite(market)&&market!==0&&Number.isFinite(assessed))?((assessed-market)/market*100):NaN;
+    obj.__diffPct=(Number.isFinite(market)&&market!==0&&Number.isFinite(assessed))?((market-assessed)/market*100):NaN;
     obj.__ratio=(Number.isFinite(market)&&market!==0&&Number.isFinite(assessed))?(assessed/market):NaN;
     obj.__provinceNorm=colMap.province?normalizeProvince(obj[colMap.province]):'';
     return obj;
@@ -129,14 +129,15 @@ function applyFilters(){
   if(sortState.key) sortRows(); currentPage=1; renderAll();
 }
 function renderKpis(){
-  const markets=rows.map(r=>r.__market), assessed=rows.map(r=>r.__assessed), ratios=rows.map(r=>r.__ratio);
-  const medM=median(markets), medA=median(assessed), medRatio=median(ratios), meanRatio=avg(ratios), diff=(medRatio-1)*100;
+  const markets=rows.map(r=>r.__market), assessed=rows.map(r=>r.__assessed), ratios=rows.map(r=>r.__ratio), diffs=rows.map(r=>r.__diffPct);
+  const medM=median(markets), medA=median(assessed), medRatio=median(ratios), medDiff=median(diffs), meanDiff=avg(diffs);
   $('kpiBox').innerHTML=`
     <div class="kpi"><div class="label">จำนวนข้อมูล</div><div class="value">${fmt(rows.length)}</div><div class="sub">รายการที่ใช้คำนวณได้</div></div>
     <div class="kpi"><div class="label">Median ราคาตลาด</div><div class="value">${fmt(medM)}</div><div class="sub">บาท/หน่วย</div></div>
     <div class="kpi"><div class="label">Median ราคาประเมิน</div><div class="value">${fmt(medA)}</div><div class="sub">บาท/หน่วย</div></div>
     <div class="kpi"><div class="label">Median Ratio</div><div class="value">${fmt(medRatio,3)}</div><div class="sub">ราคาประเมิน / ราคาตลาด</div></div>
-    <div class="kpi"><div class="label">ความต่างจากราคาตลาด</div><div class="value ${diff<0?'negative':'positive'}">${pct(diff)}</div><div class="sub">จาก Median Assessment Ratio</div></div>`;
+    <div class="kpi"><div class="label">ความแตกต่างแบบ Median</div><div class="value ${medDiff<0?'negative':'positive'}">${pct(medDiff)}</div><div class="sub">Median ของ ((ราคาตลาด-ราคาประเมิน)/ราคาตลาด)</div></div>
+    <div class="kpi"><div class="label">ความแตกต่างแบบ Mean</div><div class="value ${meanDiff<0?'negative':'positive'}">${pct(meanDiff)}</div><div class="sub">Mean ของ ((ราคาตลาด-ราคาประเมิน)/ราคาตลาด)</div></div>`;
 }
 function chartData(){
   const sorted=[...rows].sort((a,b)=>a.__market-b.__market);
@@ -148,7 +149,7 @@ function chartData(){
   for(let g=0; g<groups; g++){
     const start=Math.floor(g*n/groups), end=Math.floor((g+1)*n/groups); const part=sorted.slice(start,end); if(!part.length) continue;
     const m=median(part.map(r=>r.__market)), a=median(part.map(r=>r.__assessed));
-    data.push({x:g+1, market:m, assessed:a, diff:(a-m)/m*100, province:`กลุ่มที่ ${g+1}`, id:`Percentile ${g+1}`});
+    data.push({x:g+1, market:m, assessed:a, diff:(m-a)/m*100, province:`กลุ่มที่ ${g+1}`, id:`Percentile ${g+1}`});
   }
   return data;
 }
@@ -157,14 +158,14 @@ function renderChart(){
   chart=new Chart(ctx,{type:'line',data:{labels:data.map(d=>d.x),datasets:[
     {label:'ราคาตลาด',data:data.map(d=>d.market),borderColor:RED,backgroundColor:RED,pointRadius:data.length<=150?2:0,borderWidth:2,tension:.15},
     {label:'ราคาประเมิน',data:data.map(d=>d.assessed),borderColor:BLUE,backgroundColor:BLUE,pointRadius:data.length<=150?2:0,borderWidth:2,tension:.15}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{title:(items)=>{const d=data[items[0].dataIndex];return `ลำดับ/กลุ่ม: ${d.id}`},afterBody:(items)=>{const d=data[items[0].dataIndex];return [`ราคาประเมินต่างจากราคาตลาด ${pct(d.diff)}`, d.province?`จังหวัด/กลุ่ม: ${d.province}`:''];},label:(ctx)=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}},scales:{x:{title:{display:true,text:'เรียงตามราคาตลาดจากน้อยไปมาก'}},y:{title:{display:true,text:'ราคา'},ticks:{callback:v=>Number(v).toLocaleString('th-TH')}}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{title:(items)=>{const d=data[items[0].dataIndex];return `ลำดับ/กลุ่ม: ${d.id}`},afterBody:(items)=>{const d=data[items[0].dataIndex];const msg = d.diff >= 0 ? `ราคาประเมินต่ำกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%` : `ราคาประเมินสูงกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%`; return [msg, d.province?`จังหวัด/กลุ่ม: ${d.province}`:''];},label:(ctx)=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}},scales:{x:{title:{display:true,text:'เรียงตามราคาตลาดจากน้อยไปมาก'}},y:{title:{display:true,text:'ราคา'},ticks:{callback:v=>Number(v).toLocaleString('th-TH')}}}}});
 }
 function sortRows(){
   const k=sortState.key, d=sortState.dir;
   rows.sort((a,b)=>{const av=(k==='__market'||k==='__assessed'||k==='__diffPct'||k==='__ratio')?a[k]:parseNumber(a[k]); const bv=(k==='__market'||k==='__assessed'||k==='__diffPct'||k==='__ratio')?b[k]:parseNumber(b[k]); if(Number.isFinite(av)&&Number.isFinite(bv)) return (av-bv)*d; return String(a[k]||'').localeCompare(String(b[k]||''),'th')*d;});
 }
 function renderTable(){
-  const extra=[{key:'__market',label:'ราคาตลาด'}, {key:'__assessed',label:'ราคาประเมิน'}, {key:'__diffPct',label:'% ต่าง'}, {key:'__ratio',label:'Ratio'}];
+  const extra=[{key:'__market',label:'ราคาตลาด'}, {key:'__assessed',label:'ราคาประเมิน'}, {key:'__diffPct',label:'% ต่างจากราคาตลาด'}, {key:'__ratio',label:'Ratio'}];
   const showCols=[...columns, ...extra].filter((c,i,a)=>{const key=typeof c==='string'?c:c.key; return key && a.findIndex(x=>(typeof x==='string'?x:x.key)===key)===i;});
   const thead=$('dataTable').querySelector('thead'), tbody=$('dataTable').querySelector('tbody');
   thead.innerHTML='<tr>'+showCols.map(c=>{const key=typeof c==='string'?c:c.key, label=typeof c==='string'?c:c.label; const mark=sortState.key===key?(sortState.dir===1?' ▲':' ▼'):''; return `<th data-key="${key}">${label}${mark}</th>`}).join('')+'</tr>';
