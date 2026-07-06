@@ -42,7 +42,7 @@
   <section class="kpis" id="kpiBox"></section>
   <section class="card">
     <h2 style="margin:0 0 6px;font-size:18px">กราฟเส้นเปรียบเทียบราคาตลาดกับราคาประเมิน</h2>
-    <div class="muted">แกน X เรียงตามราคาตลาดจากค่าน้อยไปมาก และ tooltip แสดงจังหวัด หน่วยที่ดิน และเปอร์เซ็นต์ความแตกต่างทันที</div>
+    <div class="muted">แกน X เรียงตามราคาตลาดจากค่าน้อยไปมาก และ tooltip แสดงจังหวัด หน่วยที่ดินตามคอลัมน์ใน Google Sheet และเปอร์เซ็นต์ความแตกต่างทันที</div>
     <div class="legend-note"><span><i class="dot red"></i>ราคาตลาด</span><span><i class="dot blue"></i>ราคาประเมิน</span></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
   </section>
@@ -149,7 +149,17 @@ function chartData(){
   for(let g=0; g<groups; g++){
     const start=Math.floor(g*n/groups), end=Math.floor((g+1)*n/groups); const part=sorted.slice(start,end); if(!part.length) continue;
     const m=median(part.map(r=>r.__market)), a=median(part.map(r=>r.__assessed));
-    data.push({x:g+1, market:m, assessed:a, diff:(m-a)/m*100, province:'ข้อมูลสรุปแบบ Percentile', unit:`กลุ่มที่ ${g+1}`, id:`Percentile ${g+1}`});
+    const rep = part[Math.floor(part.length/2)] || part[0] || {};
+    data.push({
+      x:g+1,
+      market:m,
+      assessed:a,
+      diff:(m-a)/m*100,
+      province: colMap.province ? cleanText(rep[colMap.province]||'') : '',
+      unit: colMap.id ? cleanText(rep[colMap.id]||'') : '',
+      id:`Percentile ${g+1}`,
+      group:`กลุ่ม Percentile ${g+1}`
+    });
   }
   return data;
 }
@@ -158,7 +168,7 @@ function renderChart(){
   chart=new Chart(ctx,{type:'line',data:{labels:data.map(d=>d.x),datasets:[
     {label:'ราคาตลาด',data:data.map(d=>d.market),borderColor:RED,backgroundColor:RED,pointRadius:data.length<=150?2:0,borderWidth:2,tension:.15},
     {label:'ราคาประเมิน',data:data.map(d=>d.assessed),borderColor:BLUE,backgroundColor:BLUE,pointRadius:data.length<=150?2:0,borderWidth:2,tension:.15}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{title:(items)=>{const d=data[items[0].dataIndex];return d.unit ? `หน่วยที่ดิน: ${d.unit}` : `ลำดับ/กลุ่ม: ${d.id}`},beforeBody:(items)=>{const d=data[items[0].dataIndex];const lines=[]; if(d.province) lines.push(`จังหวัด: ${d.province}`); if(d.unit) lines.push(`หน่วยที่ดิน: ${d.unit}`); return lines;},afterBody:(items)=>{const d=data[items[0].dataIndex];const msg = d.diff >= 0 ? `ราคาประเมินต่ำกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%` : `ราคาประเมินสูงกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%`; return [msg];},label:(ctx)=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}},scales:{x:{title:{display:true,text:'เรียงตามราคาตลาดจากน้อยไปมาก'}},y:{title:{display:true,text:'ราคา'},ticks:{callback:v=>Number(v).toLocaleString('th-TH')}}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{title:(items)=>{const d=data[items[0].dataIndex];return d.unit ? `หน่วยที่ดิน: ${d.unit}` : `ลำดับ/กลุ่ม: ${d.id}`},beforeBody:(items)=>{const d=data[items[0].dataIndex];const lines=[]; if(d.group) lines.push(d.group); if(d.province) lines.push(`จังหวัด: ${d.province}`); if(d.unit) lines.push(`หน่วยที่ดิน: ${d.unit}`); return lines;},afterBody:(items)=>{const d=data[items[0].dataIndex];const msg = d.diff >= 0 ? `ราคาประเมินต่ำกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%` : `ราคาประเมินสูงกว่าราคาตลาด ${fmt(Math.abs(d.diff),2)}%`; return [msg];},label:(ctx)=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}},scales:{x:{title:{display:true,text:'เรียงตามราคาตลาดจากน้อยไปมาก'}},y:{title:{display:true,text:'ราคา'},ticks:{callback:v=>Number(v).toLocaleString('th-TH')}}}}});
 }
 function sortRows(){
   const k=sortState.key, d=sortState.dir;
