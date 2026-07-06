@@ -24,7 +24,7 @@
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Dashboard เปรียบเทียบราคาประเมินกับราคาตลาด</h1><div class="subtitle">ดึงข้อมูลจาก Google Sheet โดยตรง • กรองจังหวัดได้ • กราฟเส้นเรียงตามราคาตลาดจากน้อยไปมาก • ตารางเดียว sort ได้ทุกคอลัมน์ • ออกแบบให้รองรับข้อมูลหลักแสนรายการ</div></div>
+    <div><h1>Dashboard เปรียบเทียบราคาประเมินกับราคาตลาด</h1><div class="subtitle">ดึงข้อมูลจาก Google Sheet โดยตรง • กรองจังหวัดแบบไม่ซ้ำ • กราฟเส้นเรียงตามราคาตลาดจากน้อยไปมาก • ตารางเดียว sort ได้ทุกคอลัมน์ • ออกแบบให้รองรับข้อมูลหลักแสนรายการ</div></div>
     <div id="statusBadge" class="badge">กำลังโหลดข้อมูล...</div>
   </div>
   <div id="errorBox"></div>
@@ -81,14 +81,43 @@ function num(x){if(x==null)return NaN;let s=String(x).replace(/,/g,'').replace(/
 function fmt(x,d=2){return isFinite(x)?x.toLocaleString('th-TH',{maximumFractionDigits:d,minimumFractionDigits:d}):'-'}
 function fmt0(x){return isFinite(x)?x.toLocaleString('th-TH',{maximumFractionDigits:0}):'-'}
 function pct(x){return isFinite(x)?`${x>=0?'+':''}${fmt(x,2)}%`:'-'}
-function cleanProvinceName(v){return String(v==null?'':v).replace(/\u00A0/g,' ').replace(/[\t\r\n]+/g,' ').replace(/\s+/g,' ').trim()||'ไม่ระบุจังหวัด'}
-function provinceKey(v){return cleanProvinceName(v).replace(/^จังหวัด\s*/,'').trim().toLowerCase()}
+function cleanProvinceName(v){
+  let s=String(v==null?'':v)
+    .replace(/^\uFEFF/,'')
+    .replace(/[\u200B-\u200D\u2060]/g,'')
+    .replace(/\u00A0/g,' ')
+    .replace(/[\t\r\n]+/g,' ')
+    .replace(/[“”\"'`]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+  s=s.replace(/^จังหวัด\s*/,'').trim();
+  return s||'ไม่ระบุจังหวัด';
+}
+function provinceKey(v){
+  return cleanProvinceName(v)
+    .replace(/[\u200B-\u200D\u2060]/g,'')
+    .replace(/[\s\.\-_/]+/g,'')
+    .replace(/กรุงเทพฯ|กทม/g,'กรุงเทพมหานคร')
+    .toLocaleLowerCase('th-TH');
+}
 function median(arr){const a=arr.filter(isFinite).sort((x,y)=>x-y);if(!a.length)return NaN;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
 function escapeHTML(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
 function guessColumn(keys){const hs=headers.map(h=>String(h).toLowerCase());for(const kw of keys){const i=hs.findIndex(h=>h.includes(kw.toLowerCase()));if(i>=0)return i}return 0}
 function fillSelect(sel,idx){sel.innerHTML='';headers.forEach((h,i)=>{const o=document.createElement('option');o.value=i;o.textContent=h||`คอลัมน์ ${i+1}`;sel.appendChild(o)});sel.value=String(idx)}
 function rebuildNormalized(){const p=+$('colProvince').value,id=+$('colId').value,a=+$('colAssess').value,m=+$('colMarket').value;normalizedRows=rawRows.map((r,i)=>{const assess=num(r[a]),market=num(r[m]);const ratio=(isFinite(assess)&&isFinite(market)&&market!==0)?assess/market:NaN;const diff=(ratio-1)*100;return{idx:i+1,province:cleanProvinceName(r[p]),provinceKey:provinceKey(r[p]),id:r[id]||'',assess,market,ratio,diff,raw:r}}).filter(x=>isFinite(x.ratio)&&isFinite(x.market)&&isFinite(x.assess));fillProvince();}
-function fillProvince(){const current=$('provinceFilter').value;const map=new Map();normalizedRows.forEach(x=>{const k=x.provinceKey;if(!map.has(k))map.set(k,x.province);});const list=[...map.entries()].sort((a,b)=>a[1].localeCompare(b[1],'th'));$('provinceFilter').innerHTML='<option value="__ALL__">ทุกจังหวัด</option>'+list.map(([k,name])=>`<option value="${escapeHTML(k)}">${escapeHTML(name)}</option>`).join('');$('provinceFilter').value=map.has(current)?current:'__ALL__'}
+function fillProvince(){
+  const current=$('provinceFilter').value;
+  const map=new Map();
+  normalizedRows.forEach(x=>{
+    const name=cleanProvinceName(x.province);
+    const k=provinceKey(name);
+    if(!map.has(k)) map.set(k,name);
+  });
+  const list=[...map.entries()].sort((a,b)=>a[1].localeCompare(b[1],'th-TH'));
+  $('provinceFilter').innerHTML='<option value="__ALL__">ทุกจังหวัด</option>'+list.map(([k,name])=>`<option value="${escapeHTML(k)}">${escapeHTML(name)}</option>`).join('');
+  $('provinceFilter').value=(current==='__ALL__'||map.has(current))?current:'__ALL__';
+  $('provinceFilter').title=`พบจังหวัด ${list.length.toLocaleString('th-TH')} รายการ`;
+}
 function applyFilters(){const pv=$('provinceFilter').value,q=$('searchBox').value.trim().toLowerCase();filteredRows=normalizedRows.filter(x=>(pv==='__ALL__'||x.provinceKey===pv)&&(!q||JSON.stringify(x.raw).toLowerCase().includes(q)));renderAll();}
 function renderAll(){renderKPI(filteredRows);renderChart(filteredRows);renderTable();}
 function renderKPI(rows){const ratios=rows.map(x=>x.ratio),med=median(ratios),diff=(med-1)*100;$('kpiN').textContent=fmt0(rows.length);$('kpiMedianRatio').textContent=fmt(med,4);$('kpiDiff').textContent=pct(diff);$('kpiDiff').className='value '+(diff>0?'pos':diff<0?'neg':'neutral');$('kpiDiffNote').textContent=diff<0?`ราคาประเมินต่ำกว่าราคาตลาดประมาณ ${fmt(Math.abs(diff),2)}%`:diff>0?`ราคาประเมินสูงกว่าราคาตลาดประมาณ ${fmt(diff,2)}%`:'ราคาประเมินใกล้เคียงราคาตลาด';$('kpiMarketMed').textContent=fmt0(median(rows.map(x=>x.market)));$('kpiAssessMed').textContent=fmt0(median(rows.map(x=>x.assess)));}
