@@ -4,395 +4,102 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard เปรียบเทียบราคาประเมินกับราคาตลาด</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root{
-      --bg:#071B33;
-      --card:#0D2A4A;
-      --card2:#10395F;
-      --gold:#F6C85F;
-      --text:#F8FAFC;
-      --muted:#B9C6D4;
-      --green:#4ADE80;
-      --red:#FB7185;
-      --blue:#60A5FA;
-      --border:rgba(255,255,255,.12);
+      --bg:#06172b;--card:#0c2747;--card2:#0f345c;--line:#1d4f7f;
+      --text:#f8fafc;--muted:#b8c7d9;--gold:#f6c85f;--red:#e53935;--blue:#1976d2;
+      --green:#4ade80;--border:rgba(255,255,255,.12);--shadow:0 12px 30px rgba(0,0,0,.25)
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:"Sarabun","Noto Sans Thai",Arial,sans-serif;
-      background:linear-gradient(135deg,#04162B 0%,#071B33 45%,#102A44 100%);
-      color:var(--text);
-    }
-    .wrap{max-width:1400px;margin:0 auto;padding:24px}
-    .header{
-      display:flex;justify-content:space-between;gap:16px;align-items:flex-start;
-      padding:22px;border:1px solid var(--border);border-radius:22px;
-      background:rgba(13,42,74,.72);box-shadow:0 12px 30px rgba(0,0,0,.25);
-    }
-    h1{margin:0 0 8px;font-size:30px;line-height:1.25;color:#fff}
-    .subtitle{color:var(--muted);font-size:16px;line-height:1.6}
-    .badge{padding:10px 14px;border-radius:999px;background:rgba(246,200,95,.14);color:var(--gold);border:1px solid rgba(246,200,95,.35);white-space:nowrap}
-    .controls{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0}
-    .control{background:rgba(13,42,74,.78);border:1px solid var(--border);border-radius:16px;padding:12px}
-    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
-    select,input{width:100%;border:1px solid var(--border);background:#071B33;color:#fff;border-radius:10px;padding:10px;font-size:14px}
-    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:16px 0}
-    .kpi{background:rgba(13,42,74,.78);border:1px solid var(--border);border-radius:18px;padding:18px;min-height:124px}
-    .kpi .name{color:var(--muted);font-size:14px;margin-bottom:10px}
-    .kpi .value{font-size:28px;font-weight:800;color:#fff;line-height:1.15}
-    .kpi .note{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.45}
-    .card{background:rgba(13,42,74,.78);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.18)}
-    .card h2{margin:0 0 14px;font-size:20px;color:#fff}
-    .table-wrap{overflow:auto;max-height:530px;border-radius:14px;border:1px solid var(--border)}
-    table{width:100%;border-collapse:collapse;background:rgba(7,27,51,.72);font-size:13px}
-    th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;white-space:nowrap}
-    th{position:sticky;top:0;background:#10395F;color:var(--gold);z-index:1;cursor:pointer;user-select:none}
-    th.sortable:hover{background:#164E7A}
-    th .sort-ind{font-size:11px;color:#fff;margin-left:6px;opacity:.8}
-    th:first-child,td:first-child{text-align:left}
-    .pos{color:var(--green);font-weight:700}.neg{color:var(--red);font-weight:700}.neutral{color:var(--muted);font-weight:700}
-    .footer{color:var(--muted);font-size:13px;line-height:1.7;margin-top:16px;padding:16px;border:1px dashed var(--border);border-radius:16px}
-    .loading{padding:28px;text-align:center;color:var(--muted)}
-    .error{background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.35);color:#fecdd3;padding:14px;border-radius:14px;margin-top:14px;line-height:1.6}
-    canvas{max-height:430px}
-    @media(max-width:980px){.controls,.kpis{grid-template-columns:1fr 1fr}.header{flex-direction:column}.badge{white-space:normal}}
-    @media(max-width:640px){.controls,.kpis{grid-template-columns:1fr}.wrap{padding:14px}h1{font-size:24px}}
+    *{box-sizing:border-box} body{margin:0;font-family:"Sarabun","Noto Sans Thai",Arial,sans-serif;background:linear-gradient(135deg,#04162b 0%,#071b33 50%,#102a44 100%);color:var(--text)}
+    .wrap{max-width:1500px;margin:0 auto;padding:22px}.header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:22px;border:1px solid var(--border);border-radius:22px;background:rgba(12,39,71,.82);box-shadow:var(--shadow)}
+    h1{margin:0 0 8px;font-size:30px;line-height:1.25}.subtitle{color:var(--muted);font-size:15px;line-height:1.65}.badge{padding:10px 14px;border-radius:999px;background:rgba(246,200,95,.14);color:var(--gold);border:1px solid rgba(246,200,95,.35);white-space:nowrap;font-weight:700}
+    .controls{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr;gap:12px;margin:18px 0}.control{background:rgba(12,39,71,.8);border:1px solid var(--border);border-radius:16px;padding:12px}label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+    select,input,button{width:100%;border:1px solid var(--border);background:#071b33;color:#fff;border-radius:10px;padding:10px;font-size:14px}button{cursor:pointer;background:rgba(246,200,95,.16);color:var(--gold);font-weight:700}button:hover{background:rgba(246,200,95,.24)}
+    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}.kpi{background:rgba(12,39,71,.82);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:var(--shadow)}.kpi .label{color:var(--muted);font-size:13px}.kpi .value{font-size:26px;font-weight:800;margin-top:8px}.kpi .note{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.4}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}.card{background:rgba(12,39,71,.82);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:var(--shadow)}.card h2{margin:0 0 8px;font-size:20px}.small{color:var(--muted);font-size:13px;line-height:1.55}.chart-box{height:470px;margin-top:12px}.table-tools{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin:12px 0}.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px;max-height:620px}table{width:100%;border-collapse:collapse;font-size:13px;background:#071b33}th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:9px 10px;text-align:right;white-space:nowrap}th{position:sticky;top:0;background:#10395f;color:#fff;z-index:1;cursor:pointer;user-select:none}td:first-child,td:nth-child(2),td:nth-child(3),th:first-child,th:nth-child(2),th:nth-child(3){text-align:left}tr:hover{background:rgba(255,255,255,.05)}.pos{color:#4ade80}.neg{color:#fb7185}.neutral{color:#e5e7eb}.footer{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.6}.error{background:rgba(229,57,53,.13);border:1px solid rgba(229,57,53,.35);padding:14px;border-radius:14px;color:#fecaca}.sort-ind{color:var(--gold);margin-left:6px}.pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--muted);font-size:12px;margin-left:8px}
+    @media(max-width:1100px){.controls,.kpis,.table-tools{grid-template-columns:1fr 1fr}.header{flex-direction:column}.chart-box{height:380px}}@media(max-width:700px){.wrap{padding:12px}.controls,.kpis,.table-tools{grid-template-columns:1fr}h1{font-size:24px}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div>
-        <h1>Dashboard เปรียบเทียบราคาประเมินกับราคาตลาด</h1>
-        <div class="subtitle">
-          แสดงค่า Assessment Ratio และเปอร์เซ็นต์ความแตกต่างของราคาประเมินเทียบกับราคาตลาด<br>
-          สูตรหลัก: % ความแตกต่าง = ((ราคาประเมิน ÷ ราคาตลาด) - 1) × 100
-        </div>
-      </div>
-      <div class="badge" id="statusBadge">กำลังโหลดข้อมูล...</div>
+<div class="wrap">
+  <div class="header">
+    <div><h1>Dashboard เปรียบเทียบราคาประเมินกับราคาตลาด</h1><div class="subtitle">ดึงข้อมูลจาก Google Sheet โดยตรง • กรองจังหวัดได้ • กราฟเส้นเรียงตามราคาตลาดจากน้อยไปมาก • ตารางเดียว sort ได้ทุกคอลัมน์ • ออกแบบให้รองรับข้อมูลหลักแสนรายการ</div></div>
+    <div id="statusBadge" class="badge">กำลังโหลดข้อมูล...</div>
+  </div>
+  <div id="errorBox"></div>
+
+  <div class="controls">
+    <div class="control"><label>จังหวัด</label><select id="provinceFilter"><option value="__ALL__">ทุกจังหวัด</option></select></div>
+    <div class="control"><label>คอลัมน์จังหวัด</label><select id="colProvince"></select></div>
+    <div class="control"><label>คอลัมน์หน่วย/รหัส</label><select id="colId"></select></div>
+    <div class="control"><label>คอลัมน์ราคาประเมิน</label><select id="colAssess"></select></div>
+    <div class="control"><label>คอลัมน์ราคาตลาด</label><select id="colMarket"></select></div>
+    <div class="control"><label>รูปแบบกราฟ</label><select id="chartMode"><option value="percentile">Percentile 100 กลุ่ม (แนะนำ)</option><option value="sample">ตัวอย่างข้อมูล 800 จุด</option><option value="raw">Raw เท่าที่ระบบรับไหว</option></select></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">จำนวนข้อมูลที่ใช้คำนวณ</div><div id="kpiN" class="value">-</div><div class="note">หลังกรองจังหวัดและตัดข้อมูลผิดปกติ</div></div>
+    <div class="kpi"><div class="label">Median Ratio</div><div id="kpiMedianRatio" class="value">-</div><div class="note">ราคาประเมิน ÷ ราคาตลาด</div></div>
+    <div class="kpi"><div class="label">% ต่างจากราคาตลาด</div><div id="kpiDiff" class="value">-</div><div id="kpiDiffNote" class="note">-</div></div>
+    <div class="kpi"><div class="label">Median ราคาตลาด</div><div id="kpiMarketMed" class="value">-</div><div class="note">บาทต่อหน่วยตามข้อมูล</div></div>
+    <div class="kpi"><div class="label">Median ราคาประเมิน</div><div id="kpiAssessMed" class="value">-</div><div class="note">บาทต่อหน่วยตามข้อมูล</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>กราฟเส้น ราคาตลาด vs ราคาประเมิน</h2>
+      <div class="small">เส้นสีแดง = ราคาตลาด, เส้นสีน้ำเงิน = ราคาประเมิน โดยเรียงแกน X จากราคาตลาดค่าน้อยไปมาก เมื่อนำเคอร์เซอร์ชี้จะแสดงว่า “ราคาประเมินต่างจากราคาตลาด ...%”</div>
+      <div class="chart-box"><canvas id="priceLineChart"></canvas></div>
     </div>
 
-    <div id="errorBox"></div>
-
-    <div class="controls">
-      <div class="control">
-        <label>คอลัมน์รหัส/ชื่อหน่วยที่ดิน</label>
-        <select id="colId"></select>
+    <div class="card">
+      <h2>ตารางข้อมูล <span id="tableCount" class="pill">-</span></h2>
+      <div class="table-tools">
+        <input id="searchBox" placeholder="ค้นหาในข้อมูลที่กรองอยู่ เช่น จังหวัด อำเภอ รหัสหน่วย" />
+        <select id="pageSize"><option value="100">แสดง 100 แถว</option><option value="250">แสดง 250 แถว</option><option value="500" selected>แสดง 500 แถว</option><option value="1000">แสดง 1,000 แถว</option></select>
+        <button id="prevPage">◀ ก่อนหน้า</button>
+        <button id="nextPage">ถัดไป ▶</button>
       </div>
-      <div class="control">
-        <label>คอลัมน์ราคาประเมิน</label>
-        <select id="colAssess"></select>
-      </div>
-      <div class="control">
-        <label>คอลัมน์ราคาตลาด</label>
-        <select id="colMarket"></select>
-      </div>
-      <div class="control">
-        <label>คอลัมน์จังหวัด/กลุ่มข้อมูล (ถ้ามี)</label>
-        <select id="colGroup"></select>
-      </div>
-      <div class="control">
-        <label>ค้นหา</label>
-        <input id="searchBox" placeholder="ค้นหารหัส หน่วย หรือจังหวัด" />
-      </div>
-    </div>
-
-    <div class="kpis">
-      <div class="kpi"><div class="name">จำนวนข้อมูลที่ใช้คำนวณ</div><div class="value" id="kpiN">-</div><div class="note">ตัดรายการที่ราคาตลาดว่างหรือเท่ากับ 0</div></div>
-      <div class="kpi"><div class="name">Median Assessment Ratio</div><div class="value" id="kpiMedianRatio">-</div><div class="note">ค่ากลางของราคาประเมิน ÷ ราคาตลาด</div></div>
-      <div class="kpi"><div class="name">ต่างจากราคาตลาด</div><div class="value" id="kpiDiff">-</div><div class="note" id="kpiDiffNote">-</div></div>
-      <div class="kpi"><div class="name">Mean Ratio</div><div class="value" id="kpiMeanRatio">-</div><div class="note">ค่าเฉลี่ยของ Ratio รายหน่วย</div></div>
-      <div class="kpi"><div class="name">Weighted Mean</div><div class="value" id="kpiWeighted">-</div><div class="note">Σราคาประเมิน ÷ Σราคาตลาด</div></div>
-    </div>
-
-    <div class="card" style="margin-top:16px">
-      <h2>กราฟเส้นเปรียบเทียบราคาตลาดกับราคาประเมิน</h2>
-      <canvas id="priceLineChart"></canvas>
-      <div class="footer" style="margin-top:12px">
-        กราฟนี้แสดงข้อมูลรายหน่วยที่ดิน โดยเส้นราคาตลาดและราคาประเมินอยู่ในกราฟเดียวกัน เพื่อดูแนวโน้มและช่องว่างของราคาแต่ละหน่วยได้ชัดเจนขึ้น
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px">
-      <h2>ตารางข้อมูลรายหน่วยที่ดิน</h2>
-      <div class="footer" style="margin:0 0 12px">คลิกหัวคอลัมน์เพื่อเรียงข้อมูลจากน้อยไปมาก หรือคลิกซ้ำเพื่อเรียงจากมากไปน้อย</div>
+      <div class="small" id="pageInfo">คลิกหัวคอลัมน์เพื่อเรียงข้อมูลได้ทุกคอลัมน์</div>
       <div class="table-wrap"><table id="dataTable"></table></div>
     </div>
-
-    <div class="footer">
-      <b>หมายเหตุ:</b> Dashboard นี้คำนวณจากข้อมูลรายหน่วย โดยใช้ Assessment Ratio = ราคาประเมิน ÷ ราคาตลาด แล้วนำ Median Ratio มาสรุปว่าโดยรวมราคาประเมินแตกต่างจากราคาตลาดกี่เปอร์เซ็นต์ ซึ่งเหมาะสมกว่าการนำ Median ของราคาประเมินไปหาร Median ของราคาตลาดโดยตรง เพราะข้อมูลแต่ละชุดอาจไม่ได้สะท้อนคู่ข้อมูลเดียวกันทุกกรณี
-    </div>
   </div>
+
+  <div class="footer"><b>หมายเหตุ:</b> Dashboard นี้คำนวณจากข้อมูลรายหน่วย โดยใช้ Assessment Ratio = ราคาประเมิน ÷ ราคาตลาด และใช้ Median Ratio สรุปว่าโดยรวมราคาประเมินต่างจากราคาตลาดกี่เปอร์เซ็นต์ เพื่อให้เหมาะกับข้อมูลจำนวนมากและลดผลกระทบจากค่าผิดปกติ</div>
+</div>
 
 <script>
 const SHEET_ID = '1wUOZFRHy3Ah3eXdIxtPSfNS1gMbJ7AmFG8fZmmjx3AA';
 const GID = '0';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
-
-let rawRows = [];
-let headers = [];
-let priceLineChart;
-let sortState = { key: 'absDiff', dir: 'desc' };
-let currentTableRows = [];
-
-const $ = id => document.getElementById(id);
-
-function parseCSV(text){
-  const rows=[]; let row=[], val='', inQuotes=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i], n=text[i+1];
-    if(c==='"'){
-      if(inQuotes && n==='"'){val+='"'; i++;}
-      else inQuotes=!inQuotes;
-    } else if(c===',' && !inQuotes){row.push(val); val='';}
-    else if((c==='\n' || c==='\r') && !inQuotes){
-      if(c==='\r' && n==='\n') i++;
-      row.push(val); val='';
-      if(row.some(x=>String(x).trim()!=='')) rows.push(row);
-      row=[];
-    } else val+=c;
-  }
-  if(val!=='' || row.length){row.push(val); rows.push(row);}
-  return rows;
-}
-
-function num(x){
-  if(x===null || x===undefined) return NaN;
-  let s=String(x).replace(/,/g,'').replace(/บาท|ตร\.ว\.|%/g,'').trim();
-  if(s==='' || s==='-' || s==='null') return NaN;
-  return Number(s);
-}
+let rawRows=[], headers=[], normalizedRows=[], filteredRows=[], tableRows=[];
+let priceLineChart, sortState={key:'market',dir:'asc'}, page=1;
+const $=id=>document.getElementById(id);
+function parseCSV(text){const rows=[];let row=[],val='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){val+='"';i++;}else q=!q;}else if(c===','&&!q){row.push(val);val='';}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(val);val='';if(row.some(x=>String(x).trim()!==''))rows.push(row);row=[];}else val+=c;}if(val!==''||row.length){row.push(val);rows.push(row);}return rows;}
+function num(x){if(x==null)return NaN;let s=String(x).replace(/,/g,'').replace(/บาท|ตร\.ว\.|%/g,'').trim();if(!s||s==='-'||s.toLowerCase()==='null')return NaN;return Number(s)}
 function fmt(x,d=2){return isFinite(x)?x.toLocaleString('th-TH',{maximumFractionDigits:d,minimumFractionDigits:d}):'-'}
 function fmt0(x){return isFinite(x)?x.toLocaleString('th-TH',{maximumFractionDigits:0}):'-'}
 function pct(x){return isFinite(x)?`${x>=0?'+':''}${fmt(x,2)}%`:'-'}
-function median(arr){const a=arr.filter(isFinite).sort((x,y)=>x-y); if(!a.length)return NaN; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2;}
-function mean(arr){const a=arr.filter(isFinite); return a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;}
-
-function guessColumn(keywords){
-  const hs=headers.map(h=>String(h).toLowerCase());
-  for(const kw of keywords){
-    const idx=hs.findIndex(h=>h.includes(kw.toLowerCase()));
-    if(idx>=0) return idx;
-  }
-  return 0;
-}
-function fillSelect(sel, selectedIndex, includeNone=false){
-  sel.innerHTML='';
-  if(includeNone){const o=document.createElement('option');o.value='-1';o.textContent='ไม่ใช้';sel.appendChild(o);}
-  headers.forEach((h,i)=>{const o=document.createElement('option');o.value=i;o.textContent=h || `คอลัมน์ ${i+1}`;sel.appendChild(o);});
-  sel.value=String(selectedIndex);
-}
-
-function buildRows(){
-  const idCol=+$('colId').value, aCol=+$('colAssess').value, mCol=+$('colMarket').value, gCol=+$('colGroup').value;
-  const q=$('searchBox').value.trim().toLowerCase();
-  return rawRows.map(r=>{
-    const assess=num(r[aCol]); const market=num(r[mCol]);
-    const ratio=(isFinite(assess)&&isFinite(market)&&market!==0)?assess/market:NaN;
-    const diff=(ratio-1)*100;
-    return {id:r[idCol]||'', group:gCol>=0?(r[gCol]||'ไม่ระบุกลุ่ม'):'รวมทั้งหมด', assess, market, ratio, diff, raw:r};
-  }).filter(x=>isFinite(x.ratio) && (!q || JSON.stringify(x.raw).toLowerCase().includes(q)));
-}
-
-function render(){
-  const rows=buildRows();
-  const ratios=rows.map(x=>x.ratio);
-  const diffs=rows.map(x=>x.diff);
-  const med=median(ratios), avg=mean(ratios);
-  const sumA=rows.reduce((s,x)=>s+x.assess,0), sumM=rows.reduce((s,x)=>s+x.market,0);
-  const weighted=sumM?sumA/sumM:NaN;
-  const medDiff=(med-1)*100;
-
-  $('kpiN').textContent=fmt0(rows.length);
-  $('kpiMedianRatio').textContent=fmt(med,4);
-  $('kpiDiff').textContent=pct(medDiff);
-  $('kpiDiff').className='value '+(medDiff>0?'pos':medDiff<0?'neg':'neutral');
-  $('kpiDiffNote').textContent=medDiff<0?`ราคาประเมินต่ำกว่าราคาตลาดประมาณ ${fmt(Math.abs(medDiff),2)}%`:medDiff>0?`ราคาประเมินสูงกว่าราคาตลาดประมาณ ${fmt(medDiff,2)}%`:'ราคาประเมินใกล้เคียงราคาตลาด';
-  $('kpiMeanRatio').textContent=fmt(avg,4);
-  $('kpiWeighted').textContent=fmt(weighted,4);
-
-  renderPriceLineChart(rows);
-  currentTableRows = rows;
-  renderDataTable(rows);
-}
-
-function renderPriceLineChart(rows){
-  const maxPoints = 400;
-  let data = rows
-    .filter(x => isFinite(x.market) && isFinite(x.assess))
-    .sort((a,b) => a.market - b.market)
-    .map((x,i)=>({...x, seq:i+1}));
-
-  // เรียงข้อมูลตามราคาตลาดจากน้อยไปมาก และหากมีข้อมูลจำนวนมาก ให้ลดจำนวนจุดบนกราฟเพื่อให้หน้าเว็บทำงานลื่น
-  if(data.length > maxPoints){
-    const step = Math.ceil(data.length / maxPoints);
-    data = data.filter((_,i)=>i % step === 0).slice(0, maxPoints);
-  }
-
-  const labels = data.map(x => String(x.seq));
-  const marketData = data.map(x => x.market);
-  const assessData = data.map(x => x.assess);
-
-  if(priceLineChart) priceLineChart.destroy();
-  priceLineChart = new Chart($('priceLineChart'),{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {
-          label:'ราคาตลาด',
-          data:marketData,
-          borderColor:'#E53935',
-          backgroundColor:'rgba(229,57,53,.12)',
-          tension:.25,
-          pointRadius:data.length>120?0:2,
-          borderWidth:2
-        },
-        {
-          label:'ราคาประเมิน',
-          data:assessData,
-          borderColor:'#1976D2',
-          backgroundColor:'rgba(25,118,210,.12)',
-          tension:.25,
-          pointRadius:data.length>120?0:2,
-          borderWidth:2
-        }
-      ]
-    },
-    options:{
-      responsive:true,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{position:'bottom',labels:{color:'#fff'}},
-        tooltip:{
-          callbacks:{
-            title:function(items){
-              const i=items[0]?.dataIndex ?? 0;
-              const r=data[i];
-              return r ? `ลำดับที่ ${r.seq} ${r.id ? ' | หน่วย: ' + r.id : ''}` : '';
-            },
-            beforeBody:function(items){
-              const i=items[0]?.dataIndex ?? 0;
-              const r=data[i];
-              if(!r) return '';
-              const direction = r.diff < 0 ? 'ต่ำกว่าราคาตลาด' : r.diff > 0 ? 'สูงกว่าราคาตลาด' : 'เท่ากับราคาตลาด';
-              return `ราคาประเมินต่างจากราคาตลาด ${pct(r.diff)} (${direction})`;
-            },
-            label:function(ctx){
-              return `${ctx.dataset.label}: ${Number(ctx.raw||0).toLocaleString('th-TH',{maximumFractionDigits:0})}`;
-            },
-            afterBody:function(items){
-              const i=items[0]?.dataIndex ?? 0;
-              const r=data[i];
-              return r ? `Assessment Ratio: ${fmt(r.ratio,4)}` : '';
-            }
-          }
-        }
-      },
-      scales:{
-        x:{
-          ticks:{color:'#B9C6D4',maxRotation:0,autoSkip:true,maxTicksLimit:12},
-          grid:{color:'rgba(255,255,255,.08)'},
-          title:{display:true,text:'ลำดับหน่วยที่ดินหลังเรียงตามราคาตลาดจากน้อยไปมาก',color:'#B9C6D4'}
-        },
-        y:{
-          ticks:{color:'#B9C6D4',callback:v=>Number(v).toLocaleString('th-TH',{notation:'compact'})},
-          grid:{color:'rgba(255,255,255,.08)'},
-          title:{display:true,text:'ราคา',color:'#B9C6D4'}
-        }
-      }
-    }
-  });
-}
-
-function sortValue(row, key){
-  if(key === 'id') return String(row.id || '').toLowerCase();
-  if(key === 'group') return String(row.group || '').toLowerCase();
-  if(key === 'assess') return row.assess;
-  if(key === 'market') return row.market;
-  if(key === 'ratio') return row.ratio;
-  if(key === 'diff') return row.diff;
-  if(key === 'absDiff') return Math.abs(row.diff);
-  return '';
-}
-
-function sortRows(rows){
-  const {key, dir} = sortState;
-  const mul = dir === 'asc' ? 1 : -1;
-  return [...rows].sort((a,b)=>{
-    const av = sortValue(a,key), bv = sortValue(b,key);
-    if(typeof av === 'number' && typeof bv === 'number') return (av - bv) * mul;
-    return String(av).localeCompare(String(bv),'th') * mul;
-  });
-}
-
-function sortIndicator(key){
-  if(sortState.key !== key) return '';
-  return `<span class="sort-ind">${sortState.dir === 'asc' ? '▲' : '▼'}</span>`;
-}
-
-function renderDataTable(rows){
-  const data = sortRows(rows);
-  const columns = [
-    {key:'id', label:'หน่วยที่ดิน'},
-    {key:'group', label:'กลุ่ม'},
-    {key:'assess', label:'ราคาประเมิน'},
-    {key:'market', label:'ราคาตลาด'},
-    {key:'ratio', label:'Ratio'},
-    {key:'diff', label:'% ต่าง'},
-    {key:'absDiff', label:'% ต่างแบบค่าสัมบูรณ์'}
-  ];
-  const thead = `<thead><tr>${columns.map(c=>`<th class="sortable" data-sort="${c.key}">${c.label}${sortIndicator(c.key)}</th>`).join('')}</tr></thead>`;
-  const tbody = `<tbody>${data.map(x=>`<tr>
-    <td>${escapeHTML(x.id)}</td>
-    <td>${escapeHTML(x.group)}</td>
-    <td>${fmt0(x.assess)}</td>
-    <td>${fmt0(x.market)}</td>
-    <td>${fmt(x.ratio,4)}</td>
-    <td class="${x.diff>0?'pos':x.diff<0?'neg':'neutral'}">${pct(x.diff)}</td>
-    <td>${fmt(Math.abs(x.diff),2)}%</td>
-  </tr>`).join('')}</tbody>`;
-  $('dataTable').innerHTML = thead + tbody;
-  $('dataTable').querySelectorAll('th.sortable').forEach(th=>{
-    th.addEventListener('click',()=>{
-      const key = th.dataset.sort;
-      if(sortState.key === key) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
-      else { sortState.key = key; sortState.dir = ['id','group'].includes(key) ? 'asc' : 'desc'; }
-      renderDataTable(currentTableRows);
-    });
-  });
-}
-function escapeHTML(s){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
-
-async function load(){
-  try{
-    const res=await fetch(CSV_URL);
-    if(!res.ok) throw new Error('ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้');
-    const text=await res.text();
-    const csv=parseCSV(text);
-    headers=csv[0]||[];
-    rawRows=csv.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
-    if(!headers.length || !rawRows.length) throw new Error('ไม่พบข้อมูลในชีต หรือชีตยังไม่ได้เปิดสิทธิ์การเข้าถึง');
-    const idIdx=guessColumn(['รหัส','หน่วย','id','zone','จังหวัด','อำเภอ']);
-    const assessIdx=guessColumn(['ราคาประเมิน','ประเมิน','assess','appraised','valuation']);
-    const marketIdx=guessColumn(['ราคาตลาด','ตลาด','market','sale','ซื้อขาย']);
-    const groupIdx=guessColumn(['จังหวัด','อำเภอ','เขต','กลุ่ม','ประเภท']);
-    fillSelect($('colId'),idIdx);
-    fillSelect($('colAssess'),assessIdx);
-    fillSelect($('colMarket'),marketIdx);
-    fillSelect($('colGroup'),groupIdx,true);
-    if(groupIdx>=0) $('colGroup').value=String(groupIdx);
-    $('statusBadge').textContent=`โหลดข้อมูลแล้ว ${rawRows.length.toLocaleString('th-TH')} รายการ`;
-    ['colId','colAssess','colMarket','colGroup'].forEach(id=>$(id).addEventListener('change',render));
-    $('searchBox').addEventListener('input',render);
-    render();
-  }catch(e){
-    $('statusBadge').textContent='โหลดข้อมูลไม่สำเร็จ';
-    $('errorBox').innerHTML=`<div class="error"><b>ไม่สามารถโหลด Google Sheet ได้</b><br>${escapeHTML(e.message)}<br><br>วิธีแก้: เปิด Google Sheet → Share → General access เลือก “Anyone with the link / ทุกคนที่มีลิงก์” เป็น Viewer หรือเผยแพร่เป็น CSV แล้วเปิดไฟล์นี้ใหม่อีกครั้ง</div>`;
-  }
-}
+function cleanProvinceName(v){return String(v==null?'':v).replace(/\u00A0/g,' ').replace(/[\t\r\n]+/g,' ').replace(/\s+/g,' ').trim()||'ไม่ระบุจังหวัด'}
+function provinceKey(v){return cleanProvinceName(v).replace(/^จังหวัด\s*/,'').trim().toLowerCase()}
+function median(arr){const a=arr.filter(isFinite).sort((x,y)=>x-y);if(!a.length)return NaN;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function escapeHTML(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+function guessColumn(keys){const hs=headers.map(h=>String(h).toLowerCase());for(const kw of keys){const i=hs.findIndex(h=>h.includes(kw.toLowerCase()));if(i>=0)return i}return 0}
+function fillSelect(sel,idx){sel.innerHTML='';headers.forEach((h,i)=>{const o=document.createElement('option');o.value=i;o.textContent=h||`คอลัมน์ ${i+1}`;sel.appendChild(o)});sel.value=String(idx)}
+function rebuildNormalized(){const p=+$('colProvince').value,id=+$('colId').value,a=+$('colAssess').value,m=+$('colMarket').value;normalizedRows=rawRows.map((r,i)=>{const assess=num(r[a]),market=num(r[m]);const ratio=(isFinite(assess)&&isFinite(market)&&market!==0)?assess/market:NaN;const diff=(ratio-1)*100;return{idx:i+1,province:cleanProvinceName(r[p]),provinceKey:provinceKey(r[p]),id:r[id]||'',assess,market,ratio,diff,raw:r}}).filter(x=>isFinite(x.ratio)&&isFinite(x.market)&&isFinite(x.assess));fillProvince();}
+function fillProvince(){const current=$('provinceFilter').value;const map=new Map();normalizedRows.forEach(x=>{const k=x.provinceKey;if(!map.has(k))map.set(k,x.province);});const list=[...map.entries()].sort((a,b)=>a[1].localeCompare(b[1],'th'));$('provinceFilter').innerHTML='<option value="__ALL__">ทุกจังหวัด</option>'+list.map(([k,name])=>`<option value="${escapeHTML(k)}">${escapeHTML(name)}</option>`).join('');$('provinceFilter').value=map.has(current)?current:'__ALL__'}
+function applyFilters(){const pv=$('provinceFilter').value,q=$('searchBox').value.trim().toLowerCase();filteredRows=normalizedRows.filter(x=>(pv==='__ALL__'||x.provinceKey===pv)&&(!q||JSON.stringify(x.raw).toLowerCase().includes(q)));renderAll();}
+function renderAll(){renderKPI(filteredRows);renderChart(filteredRows);renderTable();}
+function renderKPI(rows){const ratios=rows.map(x=>x.ratio),med=median(ratios),diff=(med-1)*100;$('kpiN').textContent=fmt0(rows.length);$('kpiMedianRatio').textContent=fmt(med,4);$('kpiDiff').textContent=pct(diff);$('kpiDiff').className='value '+(diff>0?'pos':diff<0?'neg':'neutral');$('kpiDiffNote').textContent=diff<0?`ราคาประเมินต่ำกว่าราคาตลาดประมาณ ${fmt(Math.abs(diff),2)}%`:diff>0?`ราคาประเมินสูงกว่าราคาตลาดประมาณ ${fmt(diff,2)}%`:'ราคาประเมินใกล้เคียงราคาตลาด';$('kpiMarketMed').textContent=fmt0(median(rows.map(x=>x.market)));$('kpiAssessMed').textContent=fmt0(median(rows.map(x=>x.assess)));}
+function makeChartData(rows){let data=[...rows].sort((a,b)=>a.market-b.market);const mode=$('chartMode').value;if(mode==='raw'){const max=2500,step=Math.max(1,Math.ceil(data.length/max));return data.filter((_,i)=>i%step===0).slice(0,max).map((x,i)=>({...x,seq:i+1}));}if(mode==='sample'){const max=800,step=Math.max(1,Math.ceil(data.length/max));return data.filter((_,i)=>i%step===0).slice(0,max).map((x,i)=>({...x,seq:i+1}));}
+  const groups=100,n=data.length;if(!n)return[];const out=[];for(let g=0;g<groups;g++){const s=Math.floor(g*n/groups),e=Math.floor((g+1)*n/groups);const chunk=data.slice(s,Math.max(e,s+1));out.push({seq:g+1,province:'Percentile '+(g+1),id:`กลุ่มที่ ${g+1}`,market:median(chunk.map(x=>x.market)),assess:median(chunk.map(x=>x.assess)),ratio:median(chunk.map(x=>x.ratio)),diff:(median(chunk.map(x=>x.ratio))-1)*100,count:chunk.length});}return out;}
+function renderChart(rows){const data=makeChartData(rows);if(priceLineChart)priceLineChart.destroy();priceLineChart=new Chart($('priceLineChart'),{type:'line',data:{labels:data.map(x=>String(x.seq)),datasets:[{label:'ราคาตลาด',data:data.map(x=>x.market),borderColor:'#E53935',backgroundColor:'rgba(229,57,53,.10)',tension:.22,pointRadius:data.length>180?0:2,borderWidth:2},{label:'ราคาประเมิน',data:data.map(x=>x.assess),borderColor:'#1976D2',backgroundColor:'rgba(25,118,210,.10)',tension:.22,pointRadius:data.length>180?0:2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#fff'}},tooltip:{callbacks:{title:items=>{const r=data[items[0]?.dataIndex||0];return r?`ลำดับ ${r.seq} ${r.id?' | '+r.id:''}`:''},beforeBody:items=>{const r=data[items[0]?.dataIndex||0];if(!r)return'';const dir=r.diff<0?'ต่ำกว่าราคาตลาด':r.diff>0?'สูงกว่าราคาตลาด':'เท่ากับราคาตลาด';return `ราคาประเมินต่างจากราคาตลาด ${pct(r.diff)} (${dir})`;},label:ctx=>`${ctx.dataset.label}: ${Number(ctx.raw||0).toLocaleString('th-TH',{maximumFractionDigits:0})}`,afterBody:items=>{const r=data[items[0]?.dataIndex||0];return r?`Assessment Ratio: ${fmt(r.ratio,4)}${r.count?' | จำนวนในกลุ่ม: '+fmt0(r.count):''}`:''}}}},scales:{x:{ticks:{color:'#B9C6D4',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,.08)'},title:{display:true,text:'เรียงตามราคาตลาดจากน้อยไปมาก',color:'#B9C6D4'}},y:{ticks:{color:'#B9C6D4',callback:v=>Number(v).toLocaleString('th-TH',{notation:'compact'})},grid:{color:'rgba(255,255,255,.08)'},title:{display:true,text:'ราคา',color:'#B9C6D4'}}}}});}
+function sortValue(r,k){if(k==='idx')return r.idx;if(k==='province')return String(r.province).toLowerCase();if(k==='id')return String(r.id).toLowerCase();if(k==='assess')return r.assess;if(k==='market')return r.market;if(k==='ratio')return r.ratio;if(k==='diff')return r.diff;if(k==='absDiff')return Math.abs(r.diff);return''}
+function getSortedRows(){const mul=sortState.dir==='asc'?1:-1;return[...filteredRows].sort((a,b)=>{const av=sortValue(a,sortState.key),bv=sortValue(b,sortState.key);if(typeof av==='number'&&typeof bv==='number')return(av-bv)*mul;return String(av).localeCompare(String(bv),'th')*mul})}
+function sortIndicator(k){return sortState.key===k?`<span class="sort-ind">${sortState.dir==='asc'?'▲':'▼'}</span>`:''}
+function renderTable(){const sorted=getSortedRows();const ps=+$('pageSize').value,totalPages=Math.max(1,Math.ceil(sorted.length/ps));if(page>totalPages)page=totalPages;const start=(page-1)*ps,rows=sorted.slice(start,start+ps);$('tableCount').textContent=`${fmt0(sorted.length)} รายการ`;$('pageInfo').textContent=`หน้า ${fmt0(page)} / ${fmt0(totalPages)} | แสดงรายการที่ ${fmt0(start+1)}-${fmt0(Math.min(start+ps,sorted.length))} จาก ${fmt0(sorted.length)} รายการ`;const cols=[['idx','ลำดับ'],['province','จังหวัด'],['id','หน่วย/รหัส'],['assess','ราคาประเมิน'],['market','ราคาตลาด'],['ratio','Ratio'],['diff','% ต่าง'],['absDiff','% ต่างแบบค่าสัมบูรณ์']];$('dataTable').innerHTML=`<thead><tr>${cols.map(c=>`<th data-sort="${c[0]}">${c[1]}${sortIndicator(c[0])}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr><td>${fmt0(x.idx)}</td><td>${escapeHTML(x.province)}</td><td>${escapeHTML(x.id)}</td><td>${fmt0(x.assess)}</td><td>${fmt0(x.market)}</td><td>${fmt(x.ratio,4)}</td><td class="${x.diff>0?'pos':x.diff<0?'neg':'neutral'}">${pct(x.diff)}</td><td>${fmt(Math.abs(x.diff),2)}%</td></tr>`).join('')}</tbody>`;$('dataTable').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir=['province','id'].includes(k)?'asc':'desc'}page=1;renderTable();});}
+async function load(){try{const res=await fetch(CSV_URL);if(!res.ok)throw new Error('ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้');const text=await res.text();const csv=parseCSV(text);headers=csv[0]||[];rawRows=csv.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));if(!headers.length||!rawRows.length)throw new Error('ไม่พบข้อมูลในชีต หรือชีตยังไม่ได้เปิดสิทธิ์การเข้าถึง');const p=guessColumn(['จังหวัด','province','changwat']);const id=guessColumn(['รหัส','หน่วย','id','zone','แปลง']);const a=guessColumn(['ราคาประเมิน','ประเมิน','assess','appraised','valuation']);const m=guessColumn(['ราคาตลาด','ตลาด','market','sale','ซื้อขาย']);fillSelect($('colProvince'),p);fillSelect($('colId'),id);fillSelect($('colAssess'),a);fillSelect($('colMarket'),m);rebuildNormalized();$('statusBadge').textContent=`โหลดข้อมูลแล้ว ${rawRows.length.toLocaleString('th-TH')} รายการ`;['colProvince','colId','colAssess','colMarket'].forEach(id=>$(id).addEventListener('change',()=>{rebuildNormalized();page=1;applyFilters();}));$('provinceFilter').addEventListener('change',()=>{page=1;applyFilters();});$('chartMode').addEventListener('change',()=>renderChart(filteredRows));$('searchBox').addEventListener('input',()=>{page=1;applyFilters();});$('pageSize').addEventListener('change',()=>{page=1;renderTable();});$('prevPage').onclick=()=>{if(page>1){page--;renderTable();}};$('nextPage').onclick=()=>{page++;renderTable();};applyFilters();}catch(e){$('statusBadge').textContent='โหลดข้อมูลไม่สำเร็จ';$('errorBox').innerHTML=`<div class="error"><b>ไม่สามารถโหลด Google Sheet ได้</b><br>${escapeHTML(e.message)}<br><br>วิธีแก้: เปิด Google Sheet → Share → General access เลือก “Anyone with the link / ทุกคนที่มีลิงก์” เป็น Viewer หรือ Publish to web แล้วเปิดไฟล์ใหม่อีกครั้ง</div>`;}}
 load();
 </script>
 </body>
